@@ -102,12 +102,14 @@ export default function BlogScreen() {
                     <ActivityIndicator size="small" color="#00E676" style={{ marginVertical: 10 }} />
                   ) : (
                     comments.length > 0 ? comments.map((c, idx) => (
-                      <View key={idx} style={styles.commentRow}>
-                        <Image source={{ uri: c.userImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(c.userName) }} style={styles.commentAvatar} />
+                      <View key={c.commentID} style={styles.commentRow}>
+                        <View style={styles.commentAvatarCircle}>
+                          <Text style={styles.commentAvatarText}>{c.name ? c.name.charAt(0).toUpperCase() : '?'}</Text>
+                        </View>
                         <View style={{ marginLeft: 10, flex: 1 }}>
-                          <Text style={styles.commentUser}>{c.userName}</Text>
+                          <Text style={styles.commentUser}>{c.name}</Text>
                           <Text style={styles.commentDate}>{new Date(c.createdDate).toLocaleDateString('tr-TR')}</Text>
-                          <Text style={styles.commentText}>{c.content}</Text>
+                          <Text style={styles.commentText}>{c.description}</Text>
                         </View>
                       </View>
                     )) : <Text style={styles.noCommentText}>Henüz yorum yok.</Text>
@@ -296,6 +298,19 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 19,
     backgroundColor: '#eee',
+  },
+  commentAvatarCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  commentAvatarText: {
+    fontSize: 18,
+    color: '#00E676',
+    fontWeight: 'bold',
   },
   commentUser: {
     fontSize: 15,

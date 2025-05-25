@@ -61,7 +61,7 @@ export default function AboutScreen({ navigation }) {
       <View style={styles.testimonialRow}>
         {testimonialData.map((testimonial) => (
           <View style={styles.testimonialCard} key={testimonial.testimonialID}>
-            <Image source={{ uri: testimonial.ımageUrl }} style={styles.avatar} />
+            <Image source={{ uri: testimonial.imageUrl }} style={styles.avatar} />
             <Text style={styles.testimonialText}>"{testimonial.comment}"</Text>
             <Text style={styles.testimonialName}>{testimonial.name}</Text>
           </View>

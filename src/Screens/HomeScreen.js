@@ -139,24 +139,77 @@ export default function HomeScreen({ navigation }) {
       {/* Popüler Araçlar Bölümü */}
       <View style={styles.popularSection}>
         <Text style={styles.popularTitle}>Popüler Araçlar</Text>
-        <View style={styles.carsRow}>
-          {loadingPopular ? (
-            <Text>Yükleniyor...</Text>
-          ) : (
-            popularCars.map((car) => (
-              <View style={styles.carCard} key={car.carID}>
-                <Image source={{ uri: car.coverImageUrl }} style={styles.carImage} />
-                <Text style={styles.carName}>{car.model}</Text>
-                <Text style={styles.carBrand}>{car.brandName}</Text>
-                <Text style={styles.carPrice}>{car.km}/km</Text>
-                <View style={styles.cardButtons}>
-                  <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(car)}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
-                  <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(car)}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+        {loadingPopular ? (
+          <Text>Yükleniyor...</Text>
+        ) : (
+          <View style={styles.carsCustomGrid}>
+            <View style={styles.carsRow}>
+              {popularCars[0] && (
+                <View style={styles.carCard}>
+                  <Image source={{ uri: popularCars[0].coverImageUrl }} style={styles.carImage} />
+                  <Text style={styles.carName}>{popularCars[0].model}</Text>
+                  <Text style={styles.carBrand}>{popularCars[0].brandName}</Text>
+                  <Text style={styles.carPrice}>{popularCars[0].km}/km</Text>
+                  <View style={styles.cardButtons}>
+                    <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(popularCars[0])}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(popularCars[0])}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))
-          )}
-        </View>
+              )}
+              {popularCars[1] && (
+                <View style={styles.carCard}>
+                  <Image source={{ uri: popularCars[1].coverImageUrl }} style={styles.carImage} />
+                  <Text style={styles.carName}>{popularCars[1].model}</Text>
+                  <Text style={styles.carBrand}>{popularCars[1].brandName}</Text>
+                  <Text style={styles.carPrice}>{popularCars[1].km}/km</Text>
+                  <View style={styles.cardButtons}>
+                    <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(popularCars[1])}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(popularCars[1])}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              {popularCars[2] && (
+                <View style={styles.carCard}>
+                  <Image source={{ uri: popularCars[2].coverImageUrl }} style={styles.carImage} />
+                  <Text style={styles.carName}>{popularCars[2].model}</Text>
+                  <Text style={styles.carBrand}>{popularCars[2].brandName}</Text>
+                  <Text style={styles.carPrice}>{popularCars[2].km}/km</Text>
+                  <View style={styles.cardButtons}>
+                    <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(popularCars[2])}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(popularCars[2])}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+            <View style={styles.carsRow}>
+              {popularCars[3] && (
+                <View style={styles.carCard}>
+                  <Image source={{ uri: popularCars[3].coverImageUrl }} style={styles.carImage} />
+                  <Text style={styles.carName}>{popularCars[3].model}</Text>
+                  <Text style={styles.carBrand}>{popularCars[3].brandName}</Text>
+                  <Text style={styles.carPrice}>{popularCars[3].km}/km</Text>
+                  <View style={styles.cardButtons}>
+                    <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(popularCars[3])}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(popularCars[3])}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              {popularCars[4] && (
+                <View style={styles.carCard}>
+                  <Image source={{ uri: popularCars[4].coverImageUrl }} style={styles.carImage} />
+                  <Text style={styles.carName}>{popularCars[4].model}</Text>
+                  <Text style={styles.carBrand}>{popularCars[4].brandName}</Text>
+                  <Text style={styles.carPrice}>{popularCars[4].km}/km</Text>
+                  <View style={styles.cardButtons}>
+                    <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(popularCars[4])}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(popularCars[4])}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              <View style={[styles.carCard, { opacity: 0 }]}/>
+            </View>
+          </View>
+        )}
       </View>
       {/* Detay Modalı */}
       <Modal
@@ -374,6 +427,10 @@ const styles = StyleSheet.create({
     color: '#222',
     marginBottom: 16,
     marginLeft: 10,
+  },
+  carsCustomGrid: {
+    marginTop: 8,
+    marginBottom: 8,
   },
   carsRow: {
     flexDirection: 'row',
@@ -614,5 +671,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 17,
     letterSpacing: 0.2,
+  },
+  centerCarRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  centerCarCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 10,
+    width: '40%',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
 });
