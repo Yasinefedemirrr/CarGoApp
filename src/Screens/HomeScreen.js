@@ -176,7 +176,7 @@ export default function HomeScreen({ navigation }) {
                     <View style={styles.detailInfoRow}><Text style={styles.detailLabel}>Km:</Text><Text style={styles.detailValue}>{selectedCar.km}</Text></View>
                     <View style={styles.detailInfoRow}><Text style={styles.detailLabel}>Vites:</Text><Text style={styles.detailValue}>{selectedCar.transmission}</Text></View>
                     <View style={styles.detailInfoRow}><Text style={styles.detailLabel}>Koltuk:</Text><Text style={styles.detailValue}>{selectedCar.seat}</Text></View>
-                    <View style={styles.detailInfoRow}><Text style={styles.detailLabel}>Bagaj:</Text><Text style={styles.detailValue}>{selectedCar.luggage}</Text></View>
+                    <View style={styles.detailInfoRow}><Text style={styles.detailLabel}>Bagaj Hacmi:</Text><Text style={styles.detailValue}>{selectedCar.luggage}</Text></View>
                     <View style={styles.detailInfoRow}><Text style={styles.detailLabel}>Yakıt:</Text><Text style={styles.detailValue}>{selectedCar.fuel}</Text></View>
                   </View>
                   <Text style={styles.sectionTitle}>Araç Özellikleri</Text>
