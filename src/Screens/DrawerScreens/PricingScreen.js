@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 export default function PricingScreen() {
-  const [carPricings, setCarPricings] = useState([]);
+  const [pricingList, setPricingList] = useState([]);
+  const [cars, setCars] = useState([]); // Arabalar tablosu
+  const [brands, setBrands] = useState([]); // Brands tablosu
+  const [brandNameToId, setBrandNameToId] = useState({});
   const [loading, setLoading] = useState(true);
   const [reserveModalVisible, setReserveModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -15,33 +17,72 @@ export default function PricingScreen() {
     PickUpLocationID: '', DropOffLocationID: '',
     Age: '', DriverLicenseYear: '', Description: '',
   });
+  const [selectedPeriod, setSelectedPeriod] = useState('');
 
+  // Fiyat listesi
   useEffect(() => {
     fetch('http://10.0.2.2:7266/api/CarPricings/GetCarPricingWithTimePeriodList')
-      .then((response) => response.json())
-      .then((data) => {
-        setCarPricings(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then(res => res.json())
+      .then(data => setPricingList(data))
+      .catch(() => setPricingList([]));
   }, []);
 
+  // Arabalar tablosu (carID bulmak için)
+  useEffect(() => {
+    fetch('http://10.0.2.2:7266/api/Cars')
+      .then(res => res.json())
+      .then(data => setCars(data))
+      .catch(() => setCars([]));
+  }, []);
+
+  // Brands tablosu (brandName -> brandID map)
+  useEffect(() => {
+    fetch('http://10.0.2.2:7266/api/Brands')
+      .then(res => res.json())
+      .then(data => {
+        setBrands(data);
+        const map = {};
+        data.forEach(b => {
+          map[b.name.trim().toLowerCase()] = b.brandID;
+        });
+        setBrandNameToId(map);
+      })
+      .catch(() => setBrands([]));
+  }, []);
+
+  // Lokasyonlar
   useEffect(() => {
     fetch('http://10.0.2.2:7266/api/Locations')
-      .then((response) => response.json())
-      .then((data) => setLocations(data))
+      .then(res => res.json())
+      .then(data => setLocations(data))
       .catch(() => setLocations([]));
   }, []);
 
-  const openReserveModal = (car) => {
-    setSelectedCar(car);
+  const openReserveModal = (car, period) => {
+    // Fiyat kartındaki marka adını brandID'ye çevir
+    const brandID = brandNameToId[car.brand.trim().toLowerCase()];
+    if (!brandID) {
+      Alert.alert('Hata', 'Marka bulunamadı.');
+      return;
+    }
+    // Arabalar tablosunda model ve brandID ile carID bul
+    const carObj = cars.find(
+      c => c.model && car.model &&
+           c.model.trim().toLowerCase() === car.model.trim().toLowerCase() &&
+           c.brandID === brandID
+    );
+    if (!carObj) {
+      Alert.alert('Hata', 'Bu araç için carID bulunamadı.');
+      return;
+    }
+    setSelectedCar({ ...car, carID: carObj.carID });
+    setSelectedPeriod(period);
     setReserveModalVisible(true);
     setReservationForm({
       Name: '', Surname: '', Email: '', Phone: '',
       PickUpLocationID: '', DropOffLocationID: '',
       Age: '', DriverLicenseYear: '', Description: '',
     });
-    console.log('Seçilen araç:', car);
   };
   const closeReserveModal = () => {
     setReserveModalVisible(false);
@@ -53,6 +94,10 @@ export default function PricingScreen() {
   const submitReservation = async () => {
     if (!reservationForm.Name || !reservationForm.Surname || !reservationForm.Email || !reservationForm.Phone || !reservationForm.PickUpLocationID || !reservationForm.DropOffLocationID || !reservationForm.Age || !reservationForm.DriverLicenseYear) {
       Alert.alert('Hata', 'Lütfen tüm zorunlu alanları doldurun.');
+      return;
+    }
+    if (!selectedCar || !selectedCar.carID) {
+      Alert.alert('Hata', 'Araç bilgisi hatalı.');
       return;
     }
     setReservationLoading(true);
@@ -67,10 +112,10 @@ export default function PricingScreen() {
           phone: reservationForm.Phone,
           pickUpLocationID: Number(reservationForm.PickUpLocationID),
           dropOffLocationID: Number(reservationForm.DropOffLocationID),
-          carID: selectedCar && (selectedCar.carID || selectedCar.id || selectedCar.model),
+          carID: selectedCar.carID,
           age: Number(reservationForm.Age),
           driverLicenseYear: Number(reservationForm.DriverLicenseYear),
-          description: reservationForm.Description,
+          description: `[${selectedPeriod}] ${reservationForm.Description}`,
         }),
       });
       if (res.ok) {
@@ -85,63 +130,46 @@ export default function PricingScreen() {
     setReservationLoading(false);
   };
 
-  const renderStars = (count = 4) => (
-    <View style={{ flexDirection: 'row', marginLeft: 4 }}>
-      {[...Array(5)].map((_, i) => (
-        <Icon
-          key={i}
-          name={i < count ? 'star' : 'star-outline'}
-          size={16}
-          color={i < count ? '#00E676' : '#ccc'}
-          style={{ marginRight: 1 }}
-        />
-      ))}
-    </View>
-  );
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       <Text style={styles.pageTitle}>Araç Fiyat Paketleri</Text>
-      <View style={styles.table}>
-        <View style={styles.tableHeaderRow}>
-          <View style={styles.carInfoHeaderCell} />
-          <View style={styles.priceHeaderCell}><Text style={styles.headerTextBlue}>Günlük Kiralama Ücreti</Text></View>
-          <View style={styles.priceHeaderCell}><Text style={styles.headerTextGray}>Haftalık Kiralama Ücreti</Text></View>
-          <View style={styles.priceHeaderCell}><Text style={styles.headerTextBlack}>Aylık Kiralama Ücreti</Text></View>
-        </View>
-        {loading ? (
-          <ActivityIndicator size="large" color="#00E676" style={{ marginTop: 40 }} />
-        ) : (
-          carPricings.map((item, idx) => (
-            <View style={[styles.tableRow, idx % 2 === 1 && { backgroundColor: '#fafbfc' }]} key={item.model + idx}>
-              <View style={styles.carInfoCell}>
-                <Image source={{ uri: item.coverImageUrl }} style={styles.carImage} />
-                <View style={{ marginLeft: 12, flex: 1, justifyContent: 'center' }}>
-                  <Text style={styles.carName}>{item.brand} {item.model}</Text>
-                </View>
+      {pricingList.length === 0 ? (
+        <ActivityIndicator size="large" color="#00E676" style={{ marginTop: 40 }} />
+      ) : (
+        <View style={styles.cardList}>
+          {pricingList.map((item, idx) => (
+            <View style={styles.carCard} key={item.model + idx}>
+              <Image source={{ uri: item.coverImageUrl }} style={styles.carImage} />
+              <View style={styles.carInfoBox}>
+                <Text style={styles.carName}>{item.brand} {item.model}</Text>
               </View>
-              <View style={styles.priceCell}>
-                <TouchableOpacity style={styles.priceBtnSmall} onPress={() => openReserveModal(item)}><Text style={styles.priceBtnTextSmall}>Kirala</Text></TouchableOpacity>
-                <View style={styles.priceValueBox}>
-                  <Text style={styles.priceText}><Text style={styles.currency}>₺</Text>{item.dailyAmount}</Text>
+              <View style={styles.priceRow}>
+                <View style={styles.priceBox}>
+                  <Text style={styles.priceLabel}>Günlük</Text>
+                  <Text style={styles.priceValue}><Text style={styles.currency}>₺</Text>{item.dailyAmount}</Text>
+                  <TouchableOpacity style={styles.priceBtn} onPress={() => openReserveModal(item, 'Günlük')}>
+                    <Text style={styles.priceBtnText}>Kirala</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-              <View style={styles.priceCell}>
-                <TouchableOpacity style={styles.priceBtnSmall}><Text style={styles.priceBtnTextSmall}>Kirala</Text></TouchableOpacity>
-                <View style={styles.priceValueBox}>
-                  <Text style={styles.priceText}><Text style={styles.currency}>₺</Text>{item.weeklyAmount}</Text>
+                <View style={styles.priceBox}>
+                  <Text style={styles.priceLabel}>Haftalık</Text>
+                  <Text style={styles.priceValue}><Text style={styles.currency}>₺</Text>{item.weeklyAmount}</Text>
+                  <TouchableOpacity style={styles.priceBtn} onPress={() => openReserveModal(item, 'Haftalık')}>
+                    <Text style={styles.priceBtnText}>Kirala</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-              <View style={styles.priceCell}>
-                <TouchableOpacity style={styles.priceBtnSmall}><Text style={styles.priceBtnTextSmall}>Kirala</Text></TouchableOpacity>
-                <View style={styles.priceValueBox}>
-                  <Text style={styles.priceText}><Text style={styles.currency}>₺</Text>{item.monthlyAmount}</Text>
+                <View style={styles.priceBox}>
+                  <Text style={styles.priceLabel}>Aylık</Text>
+                  <Text style={styles.priceValue}><Text style={styles.currency}>₺</Text>{item.monthlyAmount}</Text>
+                  <TouchableOpacity style={styles.priceBtn} onPress={() => openReserveModal(item, 'Aylık')}>
+                    <Text style={styles.priceBtnText}>Kirala</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
-          ))
-        )}
-      </View>
+          ))}
+        </View>
+      )}
       <Modal
         visible={reserveModalVisible}
         animationType="slide"
@@ -152,6 +180,11 @@ export default function PricingScreen() {
           <View style={styles.reserveModalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.reserveTitle}>Araç Rezervasyon Formu</Text>
+              {selectedPeriod ? (
+                <Text style={{ fontSize: 16, color: '#1976D2', fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>
+                  Seçilen Paket: {selectedPeriod}
+                </Text>
+              ) : null}
               <TextInput style={styles.reserveInput} placeholder="Adınız" value={reservationForm.Name} onChangeText={t => handleReservationChange('Name', t)} />
               <TextInput style={styles.reserveInput} placeholder="Soyadınız" value={reservationForm.Surname} onChangeText={t => handleReservationChange('Surname', t)} />
               <TextInput style={styles.reserveInput} placeholder="Mail Adresiniz" value={reservationForm.Email} onChangeText={t => handleReservationChange('Email', t)} keyboardType="email-address" />
@@ -196,153 +229,110 @@ export default function PricingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f7f9fc',
     paddingTop: 18,
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#222',
-    marginLeft: 16,
+    marginLeft: 18,
     marginBottom: 18,
     marginTop: 8,
+    letterSpacing: 0.2,
   },
-  table: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginHorizontal: 8,
+  cardList: {
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+  },
+  carCard: {
     backgroundColor: '#fff',
-    elevation: 2,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-  },
-  tableHeaderRow: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#e6e6e6',
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    elevation: 4,
+    flexDirection: 'column',
     alignItems: 'center',
-    minHeight: 48,
-  },
-  carInfoHeaderCell: {
-    flex: 1.5,
-  },
-  priceHeaderCell: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  headerTextBlue: {
-    color: '#fff',
-    backgroundColor: '#00E676',
-    fontWeight: 'bold',
-    fontSize: 15,
-    paddingVertical: 7,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    overflow: 'hidden',
-    textAlign: 'center',
-  },
-  headerTextGray: {
-    color: '#fff',
-    backgroundColor: '#FF9800',
-    fontWeight: 'bold',
-    fontSize: 15,
-    paddingVertical: 7,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    overflow: 'hidden',
-    textAlign: 'center',
-  },
-  headerTextBlack: {
-    color: '#fff',
-    backgroundColor: '#304FFE',
-    fontWeight: 'bold',
-    fontSize: 15,
-    paddingVertical: 7,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    overflow: 'hidden',
-    textAlign: 'center',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 110,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
-  },
-  carInfoCell: {
-    flex: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    minHeight: 90,
   },
   carImage: {
-    width: 64,
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: '#eee',
+    width: '100%',
+    height: 120,
+    borderRadius: 14,
+    marginBottom: 14,
+    resizeMode: 'cover',
+    backgroundColor: '#f0f0f0',
+  },
+  carInfoBox: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   carName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#222',
+    textAlign: 'center',
     marginBottom: 2,
     letterSpacing: 0.1,
   },
-  ratingRow: {
+  priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 8,
   },
-  ratingLabel: {
+  priceBox: {
+    flex: 1,
+    backgroundColor: '#f7f9fc',
+    borderRadius: 14,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    shadowColor: '#00E676',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  priceLabel: {
     fontSize: 13,
     color: '#888',
-    marginRight: 2,
-  },
-  priceCell: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-  },
-  priceBtnSmall: {
-    backgroundColor: '#00E676',
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 14,
-    marginBottom: 8,
-    minWidth: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  priceBtnTextSmall: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  priceValueBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  priceText: {
-    fontSize: 20,
-    color: '#2196f3',
-    fontWeight: 'bold',
-    textAlign: 'center',
     marginBottom: 2,
+    fontWeight: 'bold',
+  },
+  priceValue: {
+    fontSize: 20,
+    color: '#1976D2',
+    fontWeight: 'bold',
+    marginBottom: 6,
   },
   currency: {
     fontSize: 17,
-    color: '#2196f3',
+    color: '#1976D2',
     fontWeight: 'bold',
+  },
+  priceBtn: {
+    backgroundColor: '#00E676',
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 18,
+    marginTop: 12,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#00E676',
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  priceBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 17,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -352,62 +342,88 @@ const styles = StyleSheet.create({
   },
   reserveModalContent: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-    maxHeight: '80%',
+    padding: 28,
+    borderRadius: 18,
+    width: '90%',
+    maxHeight: '90%',
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   reserveTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 10,
+    color: '#00E676',
+    marginBottom: 18,
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   reserveInput: {
-    height: 40,
-    borderColor: '#ccc',
+    backgroundColor: '#f7f7f7',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    marginBottom: 10,
-    padding: 10,
+    borderColor: '#e0e0e0',
+  },
+  reserveTextarea: {
+    backgroundColor: '#f7f7f7',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    minHeight: 70,
+    textAlignVertical: 'top',
   },
   reservePickerWrapper: {
+    backgroundColor: '#f7f7f7',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginBottom: 10,
+    borderColor: '#e0e0e0',
+    marginBottom: 14,
+    overflow: 'hidden',
   },
   reservePicker: {
     width: '100%',
-    height: 50,
-  },
-  reserveTextarea: {
-    height: 100,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 10,
+    color: '#222',
+    fontSize: 16,
+    height: 48,
   },
   reserveButton: {
     backgroundColor: '#00E676',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
+    borderRadius: 10,
+    paddingVertical: 15,
+    marginTop: 10,
+    marginBottom: 10,
+    width: '100%',
+    alignSelf: 'center',
   },
   reserveButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 15,
+    textAlign: 'center',
+    fontSize: 18,
+    letterSpacing: 0.2,
   },
   reserveCloseButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
+    backgroundColor: '#00C853',
+    borderRadius: 10,
+    paddingVertical: 13,
+    width: '100%',
+    alignSelf: 'center',
   },
   reserveCloseButtonText: {
-    color: '#222',
+    color: '#fff',
     fontWeight: 'bold',
-    fontSize: 15,
+    textAlign: 'center',
+    fontSize: 17,
+    letterSpacing: 0.2,
   },
 });

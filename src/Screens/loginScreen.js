@@ -1,11 +1,14 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Image, Button, Alert } from 'react-native';
 import React, { useState } from 'react';
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  
+  const handleLogin = () => {
+    navigation.navigate('HomeDrawer');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.formContainer}>
@@ -21,10 +24,10 @@ export default function LoginScreen({ navigation }) {
 
         <TextInput
           style={styles.input}
-          placeholder="E-mail"
+          placeholder="Kullanıcı Adı"
           placeholderTextColor="#999"
-          value={email}
-          onChangeText={setEmail}
+          value={username}
+          onChangeText={setUsername}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -39,9 +42,7 @@ export default function LoginScreen({ navigation }) {
         />
 
         <View style={styles.loginButton}>
-        <TouchableOpacity onPress={() => navigation.navigate('HomeDrawer')}>
-          <Text style={styles.loginButtonText}>Giriş Yap</Text>
-        </TouchableOpacity>
+          <Button title="Giriş Yap" onPress={handleLogin} />
         </View>
         <View style={styles.bottomButtonsContainer}>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
