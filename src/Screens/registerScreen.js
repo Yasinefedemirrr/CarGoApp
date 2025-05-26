@@ -1,11 +1,40 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Button, Alert } from 'react-native'
 import React, { useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function RegisterScreen({ navigation }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [email, setEmail] = useState('');
+
+  const handleRegister = async () => {
+    if (!username || !password || !name || !surname || !email) {
+      Alert.alert('Hata', 'Tüm alanları doldurun.');
+      return;
+    }
+    try {
+      const res = await fetch('http://10.0.2.2:7266/api/Registers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, name, surname, email }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          await AsyncStorage.setItem('token', data.token);
+          navigation.navigate('HomeDrawer');
+        } else {
+          Alert.alert('Hata', 'Sunucudan token alınamadı.');
+        }
+      } else {
+        Alert.alert('Hata', 'Kayıt başarısız!');
+      }
+    } catch {
+      Alert.alert('Kayıt Başarıyla oluşturuldu');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -14,18 +43,27 @@ export default function RegisterScreen({ navigation }) {
         
         <TextInput
           style={styles.input}
+          placeholder="Kullanıcı Adı"
+          placeholderTextColor="#999"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+  
+        <TextInput
+          style={styles.input}
           placeholder="Ad"
           placeholderTextColor="#999"
-          value={firstName}
-          onChangeText={setFirstName}
+          value={name}
+          onChangeText={setName}
         />
   
         <TextInput
           style={styles.input}
           placeholder="Soyad"
           placeholderTextColor="#999"
-          value={lastName}
-          onChangeText={setLastName}
+          value={surname}
+          onChangeText={setSurname}
         />
   
         <TextInput
@@ -47,9 +85,9 @@ export default function RegisterScreen({ navigation }) {
           secureTextEntry
         />
   
-        <TouchableOpacity style={styles.registerButton}>
-          <Text style={styles.registerButtonText}>Hesap Oluştur</Text>
-        </TouchableOpacity>
+        <View style={styles.registerButton}>
+          <Button title="Kayıt Ol" onPress={handleRegister} />
+        </View>
   
         <TouchableOpacity 
           style={styles.loginButton}

@@ -1,12 +1,36 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Image, Button, Alert } from 'react-native';
 import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    navigation.navigate('HomeDrawer');
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Hata', 'Kullanıcı adı ve şifre giriniz.');
+      return;
+    }
+    try {
+      const res = await fetch('http://10.0.2.2:7266/api/Login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          await AsyncStorage.setItem('token', data.token);
+          navigation.navigate('HomeDrawer');
+        } else {
+          Alert.alert('Hata', 'Sunucudan token alınamadı.');
+        }
+      } else {
+        Alert.alert('Hata', 'Kullanıcı adı veya şifre yanlış!');
+      }
+    } catch (err) {
+      Alert.alert('Hata', 'Sunucuya bağlanılamadı.');
+    }
   };
 
   return (
@@ -19,7 +43,7 @@ export default function LoginScreen({ navigation }) {
         {/* Üstte resimli container */}
         <View style={styles.headerContainer}>
           {/* Opsiyonel resim eklemek istersen */}
-          {/* <Image source={require('../assets/car.png')} style={styles.headerImage} /> */}
+          {/* <Image source={require('../assets/Images/girisEkran.jpg')} style={styles.headerImage} /> */}
         </View>
 
         <TextInput
