@@ -11,7 +11,7 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!username || !password || !name || !surname || !email) {
-      Alert.alert('Hata', 'Tüm alanları doldurun.');
+      Alert.alert('Hata', 'Tüm  Boş alanları doldurun.');
       return;
     }
     try {
@@ -26,7 +26,7 @@ export default function RegisterScreen({ navigation }) {
           await AsyncStorage.setItem('token', data.token);
           navigation.navigate('HomeDrawer');
         } else {
-          Alert.alert('Hata', 'Sunucudan token alınamadı.');
+          Alert.alert('Hata', 'Sunucudan Token alınamadı.');
         }
       } else {
         Alert.alert('Hata', 'Kayıt başarısız!');
