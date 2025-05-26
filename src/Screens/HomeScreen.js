@@ -109,7 +109,7 @@ export default function HomeScreen({ navigation }) {
       {/* Drawer Menü ve Başlık */}
       <View style={styles.drawerHeader}>
         <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-          <Icon name="menu" size={30} color="#00E676" />
+          <Image source={require('../Assets/Icon/menu.png')} style={styles.menuIcon} />
         </TouchableOpacity>
         <Text style={styles.headerLogo}>CarGo</Text>
       </View>
@@ -321,6 +321,11 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: 4,
     marginRight: 10,
+  },
+  menuIcon: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
   },
   headerLogo: {
     fontSize: 28,

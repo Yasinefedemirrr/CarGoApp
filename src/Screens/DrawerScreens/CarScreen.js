@@ -124,28 +124,33 @@ export default function CarScreen() {
   const renderItem = ({ item }) => (
     <View style={styles.carCard}>
       <Image source={{ uri: item.coverImageUrl }} style={styles.carImage} />
-      <Text style={styles.carName}>{item.model}</Text>
-      <Text style={styles.carBrand}>{item.brandName}</Text>
-      <Text style={styles.carPrice}>{item.km} km</Text>
-      <View style={styles.cardButtons}>
-        <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(item)}><Text style={styles.bookButtonText}>Hemen Kirala</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(item)}><Text style={styles.detailButtonText}>Detaylar</Text></TouchableOpacity>
+      <View style={styles.carInfoBox}>
+        <Text style={styles.carName}>{item.brandName ? item.brandName : ''} {item.model}</Text>
+        <Text style={styles.carKm}>{item.km} km</Text>
+      </View>
+      <View style={styles.cardButtonsRow}>
+        <TouchableOpacity style={styles.bookButton} onPress={() => openReserveModal(item)}>
+          <Text style={styles.bookButtonText}>Hemen Kirala</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.detailButton} onPress={() => openDetailModal(item)}>
+          <Text style={styles.detailButtonText}>Detaylar</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
+    return <ActivityIndicator size="large" color="#00E676" style={styles.loader} />;
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       <Text style={styles.title}>Araç Seçimini Yap</Text>
       <FlatList
         data={cars}
         renderItem={renderItem}
         keyExtractor={item => item.carID.toString()}
-        numColumns={numColumns}
+        numColumns={1}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
@@ -237,7 +242,7 @@ export default function CarScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -257,66 +262,63 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   listContent: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingBottom: 24,
     paddingTop: 2,
   },
   carCard: {
     backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 12,
-    width: cardWidth,
-    alignItems: 'center',
-    marginBottom: 16,
-    marginHorizontal: 6,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 0.5,
-    borderColor: '#e6e6e6',
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    elevation: 4,
+    flexDirection: 'column',
+    alignItems: 'center',
   },
   carImage: {
     width: '100%',
-    height: 110,
+    height: 120,
     borderRadius: 14,
-    marginBottom: 10,
+    marginBottom: 14,
     resizeMode: 'cover',
     backgroundColor: '#f0f0f0',
   },
+  carInfoBox: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   carName: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#222',
-    marginBottom: 2,
     textAlign: 'center',
+    marginBottom: 2,
     letterSpacing: 0.1,
   },
-  carBrand: {
-    fontSize: 13,
-    color: '#888',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  carPrice: {
+  carKm: {
     fontSize: 15,
     color: '#00C853',
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 6,
     textAlign: 'center',
   },
-  cardButtons: {
+  cardButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: 2,
+    marginTop: 8,
   },
   bookButton: {
     flex: 1,
     backgroundColor: '#00C853',
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: 10,
-    marginRight: 5,
+    marginRight: 8,
+    alignItems: 'center',
     shadowColor: '#00C853',
     shadowOpacity: 0.12,
     shadowRadius: 4,
@@ -326,24 +328,23 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
-    fontSize: 14,
-    letterSpacing: 0.1,
+    fontSize: 15,
   },
   detailButton: {
     flex: 1,
     backgroundColor: '#fff',
     borderWidth: 1.2,
     borderColor: '#00C853',
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: 10,
-    marginLeft: 5,
+    marginLeft: 8,
+    alignItems: 'center',
   },
   detailButtonText: {
     color: '#00C853',
     fontWeight: 'bold',
     textAlign: 'center',
-    fontSize: 14,
-    letterSpacing: 0.1,
+    fontSize: 15,
   },
   loader: {
     flex: 1,
